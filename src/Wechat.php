@@ -22,18 +22,22 @@
 		 * @return [type]           [description]
 		 */
 		public function valid(Request $request){
-			$signature = trim($request->input('signature',''));
-			$timestamp = trim($request->input('timestamp',''));
-			$nonce 	   = trim($request->input('nonce',''));
-			$echostr   = trim($request->input('echostr',''));
+			$signature = $request->input('signature');
+			$timestamp = $request->input('timestamp');
+			$nonce 	   = $request->input('nonce');
+			$echostr   = $request->input('echostr');
 			$token     = $this->getConfig('token');
 
 			$arr = array($token,$timestamp,$nonce);
-			sort($arr,SORT_STRING);
-			$temp = implode($arr);
-			$temp = sha1($temp);
 
-			return $temp == $signature ? true : false;
+			sort($arr,SORT_STRING);
+			$arr = join($arr);
+			$arr = sha1($arr);
+			
+			if($arr === $signature){
+				return response((int)$echostr);
+			}	
+			return 0;
 		}
 
 		/**
@@ -41,10 +45,12 @@
 		 * @param  Request $request [description]
 		 * @return [type]           [description]
 		 */
-		public function responseMeg(Request $request){
+		public function responseMsg(Request $request){
 			$data = PHP_VERSION >= 5.6 ? file_get_contents('php://input') : $GLOBALS["HTTP_RAW_POST_DATA"];
 			
 			$type = $request->input('type','text');
+
+			return true;
 
 			switch(\strtolower($type)){
 				case 'text':
@@ -65,23 +71,28 @@
 		 * @return [type]           [description]
 		 */
 		public function getUser(Request $request,$id = 0){
-			$access_token = $this->getAccessToken($request);
-			if(!is_string($access_token)){
-				return $access_token;
-			}
-
-			$id = $id ? $id : $request->input('id',0);
-
-			if($id){
-				$lang = trim($request->input('lang','zh_CN'));
-				$uri = "/cgi-bin/user/info?access_token=".$access_token."&openid=".$id."&lang=".$lang;
+			$type = $request->input('type');
+			if($type && $type == 'init'){
+				return '参数配置有误';
 			}else{
-				$next_openid = trim($request->input('next_openid',''));
-				$uri = "/cgi-bin/user/get?access_token=".$access_token."&next_openid=".$next_openid;
-			}
+				$access_token = $this->getAccessToken($request);
+				if(!is_string($access_token)){
+					return $access_token;
+				}
 
-			$response = $this->http($uri);
-			return $response;
+				$id = $id ? $id : $request->input('id',0);
+
+				if($id){
+					$lang = trim($request->input('lang','zh_CN'));
+					$uri = "/cgi-bin/user/info?access_token=".$access_token."&openid=".$id."&lang=".$lang;
+				}else{
+					$next_openid = trim($request->input('next_openid',''));
+					$uri = "/cgi-bin/user/get?access_token=".$access_token."&next_openid=".$next_openid;
+				}
+
+				$response = $this->http($uri);
+				return $response;
+			}
 		}
 
 		/**
