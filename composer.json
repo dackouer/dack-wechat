@@ -1,0 +1,18 @@
+{
+    "name": "dack/wechat",
+    "description": "dackou wechat",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Dack\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "dackou",
+            "email": "dackou@163.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
